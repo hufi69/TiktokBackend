@@ -1,3 +1,4 @@
+const Follow = require("../models/followModel");
 const User = require("../models/userModel");
 const AppError = require("../util/appError");
 const catchAsync = require("../util/catchAsync");
@@ -32,41 +33,6 @@ const filterObj = (obj, ...allowedFields) => {
   return newObj;
 };
 
-exports.getAllPatients = catchAsync(async (req, res, next) => {
-  // console.log("*********doctors*********")
-
-  const users = await User.find({ role: "patient" }).setOptions({
-    requestedBy: req.user.role,
-  });
-
-  if (!users) {
-    return next(new AppError("No users found", 404));
-  }
-
-  res.json({
-    status: "success",
-    results: users.length,
-    users,
-  });
-});
-
-exports.getAllDoctors = catchAsync(async (req, res, next) => {
-  const doctors = await User.find({ role: "doctor" }).setOptions({
-    requestedBy: req.user.role,
-  });
-
-
-
-  if (!doctors) {
-    return next(new AppError("No doctors found", 404));
-  }
-  res.json({
-    status: "success",
-    results: doctors.length,
-    users:doctors,
-  });
-});
-
 exports.updateMe = catchAsync(async (req, res, next) => {
   console.log("req.file", req.file);
   console.log("req.body", req.body);
@@ -82,13 +48,12 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 
   const filteredBody = filterObj(
     req.body,
-    "name",
-    "phone",
-    "startTime",
-    "endTime",
-    "duration",
-    "days",
-    "twoFactorEnabled"
+    "fullName",
+    "userName",
+    "occupation",
+    "email",
+    "country",
+    "dateOfBirth"
   );
 
   if (req.file) filteredBody.profilePicture = req.file.filename;
@@ -114,5 +79,19 @@ exports.getUser = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: "success",
     data: user,
+  });
+});
+
+exports.followUser = catchAsync(async (req, res, next) => {
+  const { userId } = req.body;
+
+  await Follow.create({
+    follower: req.user._id,
+    following: userId,
+  });
+
+  res.status(200).json({
+    status: "success",
+    message: "User followed successfully",
   });
 });

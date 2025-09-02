@@ -8,22 +8,51 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
-  name: {
+  fullName: {
     type: String,
-    required: true,
     trim: true,
+  },
+  // userName: {
+  //   type: String,
+  //   unique: true,
+  //   trim: true,
+  //   minlength: [3, "Username must be at least 3 characters long"],
+  //   maxlength: [30, "Username must be at most 30 characters long"],
+  //   match: [
+  //     /^[a-zA-Z0-9_]+$/,
+  //     "Username can only contain letters, numbers, and underscores",
+  //   ],
+  // },
+  occupation: {
+    type: String,
   },
   email: {
     type: String,
-    required: true,
+    required: [true, "Email is required"],
     unique: true,
     lowercase: true,
     validate: [validator.isEmail, "Please provide a valid email address"],
   },
-
-  phone: {
+  country: {
     type: String,
-    default: null,
+  },
+  dateOfBirth: {
+    type: Date,
+
+    validate: {
+      validator: function (value) {
+        // Ensure the date is in the past and user is at least 13 years old
+        const today = new Date();
+        const minAge = 13;
+        const minDate = new Date(
+          today.getFullYear() - minAge,
+          today.getMonth(),
+          today.getDate()
+        );
+        return value < minDate;
+      },
+      message: "User must be at least 13 years old",
+    },
   },
   role: {
     type: String,
@@ -37,17 +66,17 @@ const userSchema = new mongoose.Schema({
     select: false,
   },
 
-  passwordConfirm: {
-    type: String,
-    required: [true, "Please confirm your password"],
-    validate: {
-      validator(val) {
-        return val === this.password;
-      },
-      message: "Passwords do not match",
-      select: false,
-    },
-  },
+  // passwordConfirm: {
+  //   type: String,
+  //   required: [true, "Please confirm your password"],
+  //   validate: {
+  //     validator(val) {
+  //       return val === this.password;
+  //     },
+  //     message: "Passwords do not match",
+  //     select: false,
+  //   },
+  // },
 
   profilePicture: {
     type: String,
@@ -63,10 +92,17 @@ const userSchema = new mongoose.Schema({
     default: false,
   },
 
-
-  isEmailVerified : {
-    type : Boolean,
-    default:false
+  isEmailVerified: {
+    type: Boolean,
+    default: false,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
   },
   otp: String,
   otpExpiry: Date,
@@ -115,7 +151,6 @@ userSchema.methods.createResetPasswordToken = function () {
 };
 
 userSchema.methods.createOtp = function () {
-
   const otp = Math.floor(100000 + Math.random() * 900000);
   const encryptedOtp = crypto
     .createHash("sha256")

@@ -1,12 +1,14 @@
 const express = require("express");
 const authController = require("../controllers/authController");
 const passport = require("passport");
+const validateRequest = require("../validations/middleware/validateRequest");
+const { signupSchema, loginSchema, verifyOtpSchema } = require("../validations/authSchema");
 
 const router = express.Router();
 
-router.post("/signup", authController.signup);
-router.post("/login", authController.login);
-router.post("/verify-otp", authController.verifyOtp);
+router.post("/signup",  validateRequest(signupSchema), authController.signup);
+router.post("/login",  validateRequest(loginSchema), authController.login);
+router.post("/verify-otp", validateRequest(verifyOtpSchema), authController.verifyOtp);
 router.post("/resend-otp", authController.resendOtp);
 router.post("/forgot-password", authController.forgotPassword);
 router.post("/reset-password/:token", authController.resetPassword);
