@@ -1,4 +1,3 @@
-const Follow = require("../models/followModel");
 const User = require("../models/userModel");
 const AppError = require("../util/appError");
 const catchAsync = require("../util/catchAsync");
@@ -82,16 +81,4 @@ exports.getUser = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.followUser = catchAsync(async (req, res, next) => {
-  const { userId } = req.body;
 
-  await Follow.create({
-    follower: req.user._id,
-    following: userId,
-  });
-
-  res.status(200).json({
-    status: "success",
-    message: "User followed successfully",
-  });
-});

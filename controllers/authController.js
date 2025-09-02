@@ -7,7 +7,6 @@ const { sendEmail } = require("../util/email");
 const crypto = require("crypto");
 
 async function sendOtp(user, res, next) {
- 
   const otp = user.createOtp();
   await user.save({ validateBeforeSave: false });
 
@@ -40,13 +39,11 @@ function signToken(id) {
 }
 
 exports.signup = catchAsync(async (req, res, next) => {
-  console.log(req.body)
+  console.log(req.body);
 
   const newUser = await User.create({
-   
     email: req.body.email,
     password: req.body.password,
- 
   });
 
   sendOtp(newUser, res, next);
@@ -55,6 +52,7 @@ exports.signup = catchAsync(async (req, res, next) => {
 exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
+
   const user = await User.findOne({ email })
     .select("+password")
     .setOptions({ allowInactiveUsers: true });
@@ -62,6 +60,9 @@ exports.login = catchAsync(async (req, res, next) => {
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError("Incorrect email or password", 401));
   }
+
+
+
   if (user.twoFactorEnabled) {
     await sendOtp(user, res, next);
   } else {
@@ -79,7 +80,6 @@ exports.login = catchAsync(async (req, res, next) => {
 exports.verifyOtp = catchAsync(async (req, res, next) => {
   const { otp } = req.body;
 
-
   const hashedOtp = crypto
     .createHash("sha256")
     .update(otp.toString())
@@ -90,9 +90,8 @@ exports.verifyOtp = catchAsync(async (req, res, next) => {
     otpExpiry: { $gt: Date.now() },
   }).setOptions({ allowInactiveUsers: true });
 
-  
   if (!user) {
-    return next(new AppError("Invalid or expired OTP", 400));
+    return next(new AppError("Invalid or expired OTP", 400))
   }
 
   user.isEmailVerified = true;
