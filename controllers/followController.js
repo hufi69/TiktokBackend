@@ -1,4 +1,6 @@
 const Follow = require("../models/followModel");
+const User = require("../models/userModel");
+const AppError = require("../util/appError");
 const catchAsync = require("../util/catchAsync");
 
 exports.followUser = catchAsync(async (req, res, next) => {
@@ -9,6 +11,20 @@ exports.followUser = catchAsync(async (req, res, next) => {
     following: userId,
   });
 
+  const user = await User.findById(userId);
+  if (!user) {
+    return next(new AppError("User not found", 404));
+  }
+  user.followers++;
+  await user.save();
+
+  const follower = await User.findById(req.user._id);
+  if (!follower) {
+    return next(new AppError("User not found", 404));
+  }
+  follower.following++;
+  await follower.save();
+
   res.status(200).json({
     status: "success",
     message: "User followed successfully",
@@ -17,7 +33,21 @@ exports.followUser = catchAsync(async (req, res, next) => {
 
 exports.unfollowUser = catchAsync(async (req, res, next) => {
   const { userId } = req.body;
-  await Follow.findOneAndUpdate({ follower: req.user._id, following: userId }, { status: "blocked" });
+  await Follow.findOneAndDelete({ follower: req.user._id, following: userId });
+
+  const user = await User.findById(userId);
+  if (!user) {
+    return next(new AppError("User not found", 404));
+  }
+  user.followers--;
+  await user.save();
+
+  const follower = await User.findById(req.user._id);
+  if (!follower) {
+    return next(new AppError("User not found", 404));
+  }
+  follower.following--;
+  await follower.save();
 
   res.status(200).json({
     status: "success",

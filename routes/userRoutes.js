@@ -1,8 +1,7 @@
 const express = require("express");
 const userController = require("../controllers/userController");
 const authController = require("../controllers/authController");
-const validateRequest = require("../validations/middleware/validateRequest");
-const { updateMeSchema } = require("../validations/updateMeSchema");
+
 
 
 
@@ -12,10 +11,10 @@ router.patch(
   "/updateMe",
   authController.protect,
   userController.uploadProfilePicture,
-  validateRequest(updateMeSchema),
   userController.updateMe
 );
 
+router.get("/getAllUsers", authController.protect, userController.getAllUsers);
 
 router.route("/:id").get(userController.getUser);
 

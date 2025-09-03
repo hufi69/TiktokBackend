@@ -108,6 +108,14 @@ const userSchema = new mongoose.Schema({
     default: false,
   },
 
+  followers: {
+    type: Number,
+    default: 0,
+  },
+  following: {
+    type: Number,
+    default: 0,
+  },
   isEmailVerified: {
     type: Boolean,
     default: false,
@@ -134,6 +142,8 @@ userSchema.pre("save", async function (next) {
   this.updatedAt = Date.now();
   next();
 });
+
+
 
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();

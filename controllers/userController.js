@@ -36,7 +36,9 @@ exports.updateMe = catchAsync(async (req, res, next) => {
   console.log("req.file", req.file);
   console.log("req.body", req.body);
 
-  if (req.body.password || req.body.passwordConfirm) {
+  const data = JSON.parse(req.body.data);
+
+  if (data.password || data.passwordConfirm) {
     return next(
       new AppError(
         "This route is not for password updates. Please use /updateMyPassword.",
@@ -46,7 +48,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
   }
 
   const filteredBody = filterObj(
-    req.body,
+    data,
     "fullName",
     "userName",
     "occupation",
@@ -81,4 +83,13 @@ exports.getUser = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.getAllUsers = catchAsync(async (req, res, next) => {
+  const users = await User.find().select("-password -googleId -twoFactorEnabled -isEmailVerified -rememberMe -otp -otpExpiry -resetPasswordToken -resetPasswordExpiry");
+
+  res.status(200).json({
+    status: "success",
+    results: users.length,
+    data: users,
+  });
+});
 
