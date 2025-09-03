@@ -33,6 +33,16 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     validate: [validator.isEmail, "Please provide a valid email address"],
   },
+  userName: {
+    type: String,
+    trim: true,
+    minlength: [3, "Username must be at least 3 characters long"],
+    maxlength: [30, "Username must be at most 30 characters long"],
+    match: [
+      /^[a-zA-Z0-9_]+$/,
+      "Username can only contain letters, numbers, and underscores",
+    ],
+  },
   country: {
     type: String,
   },
@@ -64,6 +74,12 @@ const userSchema = new mongoose.Schema({
     required: [true, "Password is required"],
     minLength: [8, "Password must be at least 8 characters long"],
     select: false,
+  },
+
+  profileCompletionStatus: {
+    type: Number,
+    enum: [0, 1],
+    default: 0,
   },
 
   // passwordConfirm: {
@@ -104,10 +120,27 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  rememberMe : {
+    type : Boolean,
+    default : false,
+  },
+  followers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  following: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
   otp: String,
   otpExpiry: Date,
   resetPasswordToken: String,
   resetPasswordExpiry: Date,
+});
+
+userSchema.pre("save", async function (next) {
+  this.updatedAt = Date.now();
+  next();
 });
 
 userSchema.pre("save", async function (next) {

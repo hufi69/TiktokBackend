@@ -7,11 +7,13 @@ const { sendEmail } = require("../util/email");
 const crypto = require("crypto");
 
 async function sendOtp(user, res, next) {
- 
   const otp = user.createOtp();
   await user.save({ validateBeforeSave: false });
 
   const message = `Your OTP for MedAppoint is ${otp}`;
+
+  // Dev log to help manual testing
+  console.log('[DEV] OTP for', user.email, 'is', otp);
 
   try {
     await sendEmail({
@@ -40,13 +42,11 @@ function signToken(id) {
 }
 
 exports.signup = catchAsync(async (req, res, next) => {
-  console.log(req.body)
+  console.log(req.body);
 
   const newUser = await User.create({
-   
     email: req.body.email,
     password: req.body.password,
- 
   });
 
   sendOtp(newUser, res, next);
@@ -55,6 +55,7 @@ exports.signup = catchAsync(async (req, res, next) => {
 exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
+
   const user = await User.findOne({ email })
     .select("+password")
     .setOptions({ allowInactiveUsers: true });
@@ -62,6 +63,9 @@ exports.login = catchAsync(async (req, res, next) => {
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError("Incorrect email or password", 401));
   }
+
+
+
   if (user.twoFactorEnabled) {
     await sendOtp(user, res, next);
   } else {
@@ -79,7 +83,6 @@ exports.login = catchAsync(async (req, res, next) => {
 exports.verifyOtp = catchAsync(async (req, res, next) => {
   const { otp } = req.body;
 
-
   const hashedOtp = crypto
     .createHash("sha256")
     .update(otp.toString())
@@ -90,9 +93,8 @@ exports.verifyOtp = catchAsync(async (req, res, next) => {
     otpExpiry: { $gt: Date.now() },
   }).setOptions({ allowInactiveUsers: true });
 
-  
   if (!user) {
-    return next(new AppError("Invalid or expired OTP", 400));
+    return next(new AppError("Invalid or expired OTP", 400))
   }
 
   user.isEmailVerified = true;
@@ -241,36 +243,21 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   }
 
   const resetToken = user.createResetPasswordToken();
-
   await user.save({ validateBeforeSave: false });
 
-  const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+  // For development, just return the token instead of sending email
+  console.log('[DEV] Reset token for', email, 'is:', resetToken);
 
-  const message = `Forgot your password? Click here to reset it: ${resetUrl}`;
-
-  try {
-    await sendEmail({
-      email: user.email,
-      subject: "Reset your password",
-      message,
-    });
-
-    res.status(200).json({
-      status: "success",
-      message: "Reset password email sent",
-    });
-  } catch (err) {
-    console.log(err);
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpiry = undefined;
-    await user.save({ validateBeforeSave: false });
-    return next(new AppError("Error sending email", 500));
-  }
+  res.status(200).json({
+    status: "success",
+    message: "Reset password token generated",
+    resetToken: resetToken, // Only for development
+  });
 });
 
 exports.resetPassword = catchAsync(async (req, res, next) => {
   const { token } = req.params;
-  const { newPassword, confirmNewPassword } = req.body;
+  const { password } = req.body;
 
   const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
@@ -283,8 +270,8 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     return next(new AppError("Token is invalid or has expired", 400));
   }
 
-  user.password = newPassword;
-  user.passwordConfirm = confirmNewPassword;
+  user.password = password;
+  user.passwordConfirm = password;
   user.resetPasswordToken = undefined;
   user.resetPasswordExpiry = undefined;
   await user.save({ validateBeforeSave: false });
@@ -298,6 +285,21 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 // backend/controllers/authController.js
 // Keep your existing googleCallback function as is
 // Add this new function for calendar callback:
+
+exports.verifyToken = catchAsync(async (req, res, next) => {
+  // The protect middleware already verified the token and set req.user
+  // We just need to return the user data
+  const user = req.user;
+  
+  // Remove password from response
+  user.password = undefined;
+  
+  res.status(200).json({
+    status: "success",
+    message: "Token is valid",
+    user: user,
+  });
+});
 
 exports.googleCalendarCallback = catchAsync(async (req, res, next) => {
   if (!req.user) {

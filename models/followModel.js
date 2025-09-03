@@ -63,12 +63,13 @@ followSchema.set("toJSON", { virtuals: true });
 followSchema.set("toObject", { virtuals: true });
 
 // Static method to check if user A follows user B
-followSchema.statics.isFollowing = function (followerId, followingId) {
-  return this.findOne({
+followSchema.statics.isFollowing = async function (followerId, followingId) {
+  return !!(await this.exists({
     follower: followerId,
     following: followingId,
     status: "active",
-  });
+  }));
+
 };
 
 // Static method to get followers count

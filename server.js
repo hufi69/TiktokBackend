@@ -6,7 +6,7 @@ const http = require('http');
 
 
 
-const PORT = process.env.PORT || 8001;
+const PORT = process.env.PORT || 8000;
 
 mongoose.connect(process.env.DB_URL).then(() => {
   console.log("DB connection successful!");
