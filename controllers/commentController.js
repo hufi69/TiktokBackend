@@ -51,14 +51,14 @@ exports.createComment = catchAsync(async (req, res, next) => {
 
 
 exports.deleteComment = catchAsync(async (req, res, next) => {
-  const { commentId , postId  } = req.body;
+  const { commentId  } = req.body;
   const userId = req.user._id;
   const comment = await Comment.findOneAndDelete( { _id: commentId , user: userId });
 
   if (!comment) {
     return next(new AppError("Comment not found", 404));
   }
-  const post = await Post.findById(postId);
+  const post = await Post.findById(comment.post);
   if (!post) {
     return next(new AppError("Post not found", 404));
   }
