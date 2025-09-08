@@ -86,7 +86,6 @@ exports.createPost = catchAsync(async (req, res, next) => {
 exports.getPosts = catchAsync(async (req, res, next) => {
   const { page = 1, limit = 10, author, tags, sort = 'newest' } = req.query;
   
-  // Build query
   const query = { isPublic: true };
   
   if (author) {
@@ -97,7 +96,6 @@ exports.getPosts = catchAsync(async (req, res, next) => {
     query.tags = { $in: tags.split(',') };
   }
   
-  // Build sort
   let sortBy = { createdAt: -1 };
   if (sort === 'oldest') {
     sortBy = { createdAt: 1 };
@@ -105,7 +103,6 @@ exports.getPosts = catchAsync(async (req, res, next) => {
     sortBy = { likes: -1, createdAt: -1 };
   }
   
-  // Execute query with pagination
   const posts = await Post.find(query)
     .populate('author', 'fullName userName profilePicture')
     .sort(sortBy)
@@ -268,7 +265,6 @@ exports.toggleLike = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: {
-      post,
       liked: !isLiked
     }
   });
