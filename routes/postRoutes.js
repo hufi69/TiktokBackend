@@ -25,6 +25,7 @@ router.route('/')
 router.route('/:id')
   .get(postController.getPost)
   .patch(
+    uploadPostMedia,
     validateRequest(updatePostSchema),
     postController.updatePost
   )
@@ -34,3 +35,5 @@ router.route('/:id')
 router.patch('/:id/like', postController.toggleLike);
 
 module.exports = router;
+
+

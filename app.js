@@ -19,7 +19,12 @@ const passport = require("passport");
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:8081', 'http://localhost:3000', 'https://9385ece3f902.ngrok-free.app'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
 
 app.use(morgan("dev"));
 

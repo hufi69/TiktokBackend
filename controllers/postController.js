@@ -159,10 +159,51 @@ exports.updatePost = catchAsync(async (req, res, next) => {
     return next(new AppError('You can only update your own posts', 403));
   }
   
+  // Prepare update data
+  const updateData = { content, isPublic, tags };
+  
+  // Handle media files if uploaded
+  if (req.files) {
+    const newMedia = [];
+    
+    // Handle images
+    if (req.files.images) {
+      req.files.images.forEach(file => {
+        newMedia.push({
+          type: 'image',
+          filename: file.filename,
+          originalName: file.originalname,
+          mimetype: file.mimetype,
+          size: file.size,
+          path: file.path
+        });
+      });
+    }
+    
+    // Handle videos
+    if (req.files.videos) {
+      req.files.videos.forEach(file => {
+        newMedia.push({
+          type: 'video',
+          filename: file.filename,
+          originalName: file.originalname,
+          mimetype: file.mimetype,
+          size: file.size,
+          path: file.path
+        });
+      });
+    }
+    
+    // If new media is uploaded, replace existing media
+    if (newMedia.length > 0) {
+      updateData.media = newMedia;
+    }
+  }
+  
   // Update post
   const updatedPost = await Post.findByIdAndUpdate(
     req.params.id,
-    { content, isPublic, tags },
+    updateData,
     { new: true, runValidators: true }
   ).populate('author', 'fullName userName profilePicture');
   
