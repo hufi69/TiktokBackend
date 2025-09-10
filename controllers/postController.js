@@ -72,7 +72,7 @@ exports.createPost = catchAsync(async (req, res, next) => {
   const post = await Post.create(postData);
   
   // Populate author information
-  await post.populate('author', 'fullName userName profilePicture');
+  await post.populate('author', 'fullName userName profilePicture occupation');
   
   res.status(201).json({
     status: 'success',
@@ -84,7 +84,7 @@ exports.createPost = catchAsync(async (req, res, next) => {
 
 // Get all posts (with pagination and filtering)
 exports.getPosts = catchAsync(async (req, res, next) => {
-  const { page = 1, limit = 10, author, tags, sort = 'newest' } = req.query;
+  const { page = 1, limit = 50, author, tags, sort = 'newest' } = req.query;
   
   const query = { isPublic: true };
   
@@ -143,16 +143,29 @@ exports.getPost = catchAsync(async (req, res, next) => {
 
 // Update a post
 exports.updatePost = catchAsync(async (req, res, next) => {
+  console.log('🔧 Update post request received:', {
+    postId: req.params.id,
+    userId: req.user.id,
+    body: req.body,
+    files: req.files,
+    contentType: req.get('Content-Type')
+  });
+  
   const { content, isPublic, tags } = req.body;
   
   const post = await Post.findById(req.params.id);
   
   if (!post) {
+    console.log('❌ Post not found:', req.params.id);
     return next(new AppError('No post found with that ID', 404));
   }
   
   // Check if user is the author
   if (post.author.toString() !== req.user.id) {
+    console.log('❌ User not authorized to update post:', {
+      postAuthor: post.author.toString(),
+      userId: req.user.id
+    });
     return next(new AppError('You can only update your own posts', 403));
   }
   
@@ -168,6 +181,7 @@ exports.updatePost = catchAsync(async (req, res, next) => {
       req.files.images.forEach(file => {
         newMedia.push({
           type: 'image',
+          url: `/public/uploads/posts/images/${file.filename}`,
           filename: file.filename,
           originalName: file.originalname,
           mimetype: file.mimetype,
@@ -182,6 +196,7 @@ exports.updatePost = catchAsync(async (req, res, next) => {
       req.files.videos.forEach(file => {
         newMedia.push({
           type: 'video',
+          url: `/public/uploads/posts/videos/${file.filename}`,
           filename: file.filename,
           originalName: file.originalname,
           mimetype: file.mimetype,
@@ -204,6 +219,10 @@ exports.updatePost = catchAsync(async (req, res, next) => {
     { new: true, runValidators: true }
   ).populate('author', 'fullName userName profilePicture');
   
+  console.log('📦 Updated post:', updatedPost);
+  console.log('📦 Update data:', updateData);
+  
+  console.log('✅ Sending response for post update');
   res.status(200).json({
     status: 'success',
     data: {

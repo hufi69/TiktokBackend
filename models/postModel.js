@@ -22,6 +22,16 @@ const postSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Comment'
   }],
+  commentsCount: { 
+    type: Number, 
+    default: 0, 
+    index: true 
+  },
+  lastCommentedAt: { 
+    type: Date, 
+    default: null, 
+    index: true 
+  },
   shares: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
@@ -58,6 +68,7 @@ postSchema.index({ author: 1, createdAt: -1 });
 postSchema.index({ createdAt: -1 });
 postSchema.index({ 'location.coordinates': '2dsphere' });
 postSchema.index({ tags: 1 });
+postSchema.index({ lastCommentedAt: -1 }); // feed sort if needed
 
 // Pre-save middleware
 postSchema.pre('save', function(next) {

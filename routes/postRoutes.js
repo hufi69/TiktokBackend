@@ -1,5 +1,6 @@
 const express = require('express');
 const postController = require('../controllers/postController');
+const commentController = require('../controllers/commentController');
 const authController = require('../controllers/authController');
 const { uploadPostMedia } = require('../util/multerConfig');
 const validateRequest = require('../validations/middleware/validateRequest');
@@ -26,13 +27,16 @@ router.route('/:id')
   .get(postController.getPost)
   .patch(
     uploadPostMedia,
-    validateRequest(updatePostSchema),
     postController.updatePost
   )
   .delete(postController.deletePost);
 
 // Like/Unlike post
 router.patch('/:id/like', postController.toggleLike);
+
+// Comments for posts (new scalable endpoints)
+router.get('/:postId/comments', commentController.listComments);
+router.post('/:postId/comments', commentController.createComment);
 
 module.exports = router;
 
