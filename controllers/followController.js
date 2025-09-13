@@ -74,7 +74,7 @@ exports.getFollowing = catchAsync(async (req, res, next) => {
 });
 
 exports.getMutualFollows = catchAsync(async (req, res, next) => { 
-  const { userId } = req.body;
+  const { userId } = req.params;
   const mutualFollows = await Follow.getMutualFollows(req.user._id, userId);
 
   res.status(200).json({

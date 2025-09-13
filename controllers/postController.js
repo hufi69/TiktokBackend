@@ -3,6 +3,7 @@ const AppError = require("../util/appError");
 const catchAsync = require("../util/catchAsync");
 const fs = require("fs");
 const path = require("path");
+const Like = require("../models/likeModel");
 
 // Helper function to process uploaded media files
 const processUploadedFiles = (req) => {
@@ -118,16 +119,36 @@ exports.getPosts = catchAsync(async (req, res, next) => {
 
   const total = await Post.countDocuments(query);
 
+  
+  const userId = req.user._id 
+  let likedSet = new Set();
+
+  if (userId) {
+    // One DB call to get likes by this user for all posts on the page
+    const postIds = posts.map((p) => p._id);
+    const likes = await Like.find({ user: userId, post: { $in: postIds } }).select("post");
+
+
+    likedSet = new Set(likes.map((l) => l.post.toString()));
+  }
+
+  // Convert posts to plain objects and attach likedByMe
+  const postsWithLikeFlag = posts.map((p) => {
+    const obj = p.toObject({ virtuals: true }); // keep virtuals if any
+    obj.likedByMe = userId ? likedSet.has(p._id.toString()) : false;
+    return obj;
+  });
+
+  // Send response
   res.status(200).json({
     status: "success",
-    results: posts.length,
+    results: postsWithLikeFlag.length,
     total,
     currentPage: page,
-    totalPages: Math.ceil(total / limit),
-    data: {
-      posts,
-    },
+    totalPages: Math.ceil(total / limit), 
+    data: { posts: postsWithLikeFlag },
   });
+
 });
 
 // Getting a single post
@@ -141,10 +162,12 @@ exports.getPost = catchAsync(async (req, res, next) => {
     return next(new AppError("No post found with that ID", 404));
   }
 
+  const likedByMe = !!(await Like.exists({ user: req.user._id }));
   res.status(200).json({
     status: "success",
     data: {
       post,
+      likedByMe,
     },
   });
 });
@@ -214,33 +237,5 @@ exports.deletePost = catchAsync(async (req, res, next) => {
   res.status(204).json({
     status: "success",
     data: null,
-  });
-});
-
-// Liking/Unliking a post
-exports.toggleLike = catchAsync(async (req, res, next) => {
-  const post = await Post.findById(req.params.id);
-
-  if (!post) {
-    return next(new AppError("No post found with that ID", 404));
-  }
-
-  const userId = req.user.id;
-  const isLiked = post.likes.includes(userId);
-
-  if (isLiked) {
-    post.likes.pull(userId);
-  } else {
-    post.likes.push(userId);
-  }
-
-  await post.save();
-
-  res.status(200).json({
-    status: "success",
-    data: {
-      post,
-      liked: !isLiked,
-    },
   });
 });

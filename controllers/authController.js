@@ -11,7 +11,7 @@ async function sendOtp(user, res, next) {
   await user.save({ validateBeforeSave: false });
 
   const message = `Your OTP for MedAppoint is ${otp}`;
-
+console.log("OTP**************",otp)
   try {
     await sendEmail({
       email: user.email,

@@ -8,6 +8,7 @@ router.use(authController.protect);
 
 router.post("/like", likeController.likePost);
 router.delete("/unlike", likeController.unlikePost);
+// Support both GET (with query) and POST (with body) for flexibility
 router.get("/get-likes", likeController.getLikes);
 router.post("/like-comment", likeController.likeComment);
 

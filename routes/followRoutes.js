@@ -17,7 +17,7 @@ router.post(
 router.delete("/unfollow", followController.unfollowUser);
 
 router.get("/following", followController.getFollowing);
-router.get("/mutual", followController.getMutualFollows);
+router.get("/mutual/:userId", followController.getMutualFollows);
 router.get("/followers-count", followController.getFollowersCount);
 router.get("/following-count", followController.getFollowingCount);
 router.get("/followers", followController.getFollowers);

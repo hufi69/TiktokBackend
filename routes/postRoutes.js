@@ -30,7 +30,5 @@ router
   .patch(validateRequest(updatePostSchema), postController.updatePost)
   .delete(postController.deletePost);
 
-// Like/Unlike post
-router.patch("/:id/like", postController.toggleLike);
 
 module.exports = router;

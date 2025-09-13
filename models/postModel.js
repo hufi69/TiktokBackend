@@ -30,6 +30,9 @@ const mediaSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+}, {
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
 
